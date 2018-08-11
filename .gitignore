@@ -1,3 +1,6 @@
+# General Stuff
+.untracked
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
