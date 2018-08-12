@@ -26,6 +26,7 @@ from wand.image import Image
 import base64
 from pprint import pprint
 import urllib.request
+import math
 
 
 ################################################## GLOBAL VARIABLES ########################################
@@ -221,7 +222,7 @@ def writeIcon(params):
     image = dwg.add(icon)
   return True
   
-def GetTheme(theme, element, default):
+def GetTheme(theme, element, default=None):
   global themes
   element = element.upper()
   try:
@@ -239,6 +240,7 @@ def GetTheme(theme, element, default):
 # Creates colored blocks and text for fields
 def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=None):
     global dwg
+    global themes
 
     border_color = GetTheme(theme,"Border Color",'red')
     border_width = GetTheme(theme,"Border Width",1)
@@ -252,9 +254,17 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     fontbold     = GetTheme(theme,"Font Bold","normal")
     fontstretch  = GetTheme(theme,"Font Stretch","normal")
 
-    boxname      = GetTheme(theme,"BOXES","STD")
+    boxname      = GetTheme(theme,"BOXES")
+    if (boxname is None):
+      boxtheme = theme
+    else:
+      boxtheme = "BOX_"+boxname
 
-    boxtheme = "BOX_"+boxname
+    if boxtheme in themes:
+      boxtheme = "BOX_"+boxname
+    else:
+      print("ERROR: BOX Theme {} not known!".format(boxtheme))
+      return False
 
     if (W is None):
       W            = GetTheme(boxtheme,"Width", 0)
@@ -266,40 +276,48 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     skew_shift   = GetTheme(boxtheme,"Skew Offset",0)
 
     if (justX == "LEFT"):
-      xalign = 'start'
+      xanchor = 'start'
+      xalign = -(W/2)
     elif (justX == "RIGHT"):
-      xalign = 'end'
+      xanchor = 'end'
+      xalign = (W/2)
     else:
-      xalign = 'middle'
+      xanchor = 'middle'
+      xalign = 0
 
     if (justY == "TOP"):
-      yalign = fontsize
-    elif (justX == "BOTTOM"):
-      yalign = 0
+      yalign = -(H/2)+(fontsize)
+    elif (justY == "BOTTOM"):
+      yalign = (H/2)-(fontsize/2)
     else:
-      yalign = (fontsize/2)
+      yalign = 0+(fontsize/3)
+
+    boxgroup = dwg.g()
 
     # Box
-    rect = dwg.rect(
-        (X+skew_shift, Y), (W, H), corner_rx, corner_ry,
+    rect = boxgroup.add(dwg.rect(
+        (-W/2, -H/2), (W, H), corner_rx, corner_ry,
         stroke = border_color, fill_opacity = opacity, fill = fill_color,
         stroke_width = border_width, stroke_opacity = border_opacity
-        )
+        ))
     if (skew != 0):
-      rect.skewX(skew)        
-
-    dwg.add(rect)
+      rect.skewX(skew)
 
     # Text
     if ((contents is not None) and (contents != "")):
-      dwg.add(dwg.text(
+      boxgroup.add(dwg.text(
           contents,
-          ((X+(W/2)), (Y+(H/2)+yalign)),
+          (xalign, yalign),
           font_size = fontsize, font_family=font, fill = fontcolor,
           font_style = fontslant,
           font_weight = fontbold,
           font_stretch = fontstretch,
-          text_anchor=xalign))               
+          text_anchor=xanchor))               
+
+    boxgroup.translate(X+(W/2),Y+(H/2))
+
+    dwg.add(boxgroup)
+
 
 def SetupDraw(row):
   global dwg
@@ -573,7 +591,6 @@ def writePins(params):
     if (index < len(pin_func_types)):
       pinfunc = param_to_str(params,index+4)
       theme = pin_func_types[index]
-      #box   = GetTheme
 
       if (pinfunc is not None):
         TextBox(AnchorX+OffsetX+BoxOffsetX,AnchorY+OffsetY, theme, pinfunc,    linesettings["JUSTIFY X"], linesettings["JUSTIFY Y"])
@@ -625,14 +642,9 @@ def drawBox(params):
   pagedimensions = GetPageDimensions()
 
   if (Width is not None) and (Width < 1):
-      print("HERE 1")
-      pprint(Width)
-      pprint(pagedimensions)
       Width = round(get_size(Width,pagedimensions[1][0]))
   if (Height is not None) and (Height < 1):
-      print("HERE 2")
       Height = round(get_size(Height,pagedimensions[1][1]))
-  print("HERE 3")
 
   if (theme is None):
     print("Box Theme name parameter missing!")
@@ -657,7 +669,6 @@ def drawBox(params):
   if (ok):
     TextBox(X, Y, "BOX_"+theme, message, justX=justifyX, justY=justifyY, W=Width, H=Height)
 
-  print(ok)
   return ok
 
 def DefineFont():
@@ -680,10 +691,6 @@ csvCommands = {
     "FONT STRETCH" : SetThemeStr,
     "CORNER RX"    : SetThemeInt,
     "CORNER RY"    : SetThemeInt,
-    "X ALIGN"      : SetThemeInt,
-    "Y ALIGN"      : SetThemeInt,
-    "SKEW"         : SetThemeInt,
-    "SKEW SHIFT"   : SetThemeInt,
     "BOXES"        : SetThemeStr,
     "PAGE"         : SetPageSize,
     "DPI"          : SetDPI,
@@ -731,8 +738,9 @@ def ReadCSV(fcsv, fsvg):
       row = [entry.strip() for entry in row]  # Clean up extra spaces
 
       line = line + 1
-      if (EmptyRow(row)):
+      if ((EmptyRow(row)) or (row[0][0]=="#")):
         # ignore blank lines
+        # And commented out commands
         continue
       try:
         lineError = not csvCommands[mode][row[0]](row)
