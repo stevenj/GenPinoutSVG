@@ -40,20 +40,35 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
 ### **SETUP** Phase Commands (Called before the **DRAW** Command)
 
 * **LABEL**, DEFAULT, TYPE, GROUP, \<list of labels for pin attributes\>
-    * Defines PIN labels, best as the first command in the file. Aligns with pin data draw commands in draw phase.  Helps create named columns which ease editing in a spreadsheet.
-        * DEFAULT - Defines the Default theme
-        * TYPE - Pin Type Theme Settings
-        * GROUP - Pin Group Theme Settings
-        * \<List> - The List of PIN Functions
+  * Defines PIN labels, best as the first command in the file. Aligns with pin data draw commands in draw phase.  Helps create named columns which ease editing in a spreadsheet.
+    * DEFAULT - Defines the Default theme
+    * TYPE - Pin Type Theme Settings
+    * GROUP - Pin Group Theme Settings
+    * \<List> - The List of PIN Functions
 * **BORDER COLOR**,  default, \<type>, \<group>, \<List of border colors for each label>
-    * Defines Theme border color of Pin Type
-        * DEFAULT - Default border color, must be specified
-        * \<type> - Optional border color for Types
-        * \<group> - Optional border color for Pin Groups
-        * \<list> - Optional border color for each Pin Label
-* **FILL COLOR**,    <default>, <type>, <group>, <List of fill colors for each label>                       - Theme
-* **OPACITY**,       <default>, <type>, <group>, <List of opacities for each label>                         - Theme
-* **FONT**,          <default>, <type>, <group>, <List of font names for each label>                        - Theme
+  * Defines Theme border color of Pin Type
+    * DEFAULT - Default border color, must be specified
+    * \<type> - Optional border color for Types
+    * \<group> - Optional border color for Pin Groups
+    * \<list> - Optional border color for each Pin Label
+* **FILL COLOR**, default, \<type>, \<group>, \<List of fill colors for each label>
+  * Defines Theme fill color of Pin Type
+    * DEFAULT - Default fill color, must be specified
+    * \<type> - Optional fill color for Types
+    * \<group> - Optional fill color for Pin Groups
+    * \<list> - Optional fill color for each Pin Label
+* **OPACITY**, default, \<type>, \<group>, \<List of opacities for each label>
+  * Theme Opacity Value of Pin Type
+    * DEFAULT - Default fill color opacity, must be specified
+    * \<type> - Optional fill color opacity for Types
+    * \<group> - Optional fill color opacity for Pin Groups
+    * \<list> - Optional fill color opacity for each Pin Label
+* **FONT** \default, \<type>, \<group>, \<List of font names for each label>
+  * Theme Font of Pin Type
+    * DEFAULT - Default Font, must be specified
+    * \<type> - Optional Font for Types
+    * \<group> - Optional Font for Pin Groups
+    * \<list> - Optional Font for each Pin Label 
 * **FONT SIZE**,     <default>, <type>, <group>, <List of font sizes for each label>                        - Theme
 * **FONT COLOR**,    <default>, <type>, <group>, <List of font colors for each label>                       - Theme
 * **FONT SLANT**,    <default>, <type>, <group>, <List of font colors for each label>                       - Theme - 0 = Normal 1 = Slight 
