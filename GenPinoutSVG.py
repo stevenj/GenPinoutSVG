@@ -65,8 +65,11 @@ def GetPageDimensions(pagetype=pagetype, dpi=pagedpi):
     print("ERROR: Unkown Page Type {}. Defaulting to 'A4-L'".format(pagetype))
     pagetype = "A4-L"
 
-  return ( ( (int(round((pagedimensions[pagetype][0] * dpi) / 25.4))),
-             (int(round((pagedimensions[pagetype][1] * dpi) / 25.4))) ) )
+  pagesize = (pagedimensions[pagetype][0], pagedimensions[pagetype][1])
+  pageresolution = ((int(round((pagedimensions[pagetype][0] * dpi) / 25.4))),
+                    (int(round((pagedimensions[pagetype][1] * dpi) / 25.4))))
+
+  return ( pagesize, pageresolution)
 
 def param_to_int(param, index, default=None):
   try: 
@@ -162,8 +165,8 @@ def writeImage(params):
 
     pagedimensions = GetPageDimensions()
 
-    X = get_size(X, pagedimensions[0], 0)
-    Y = get_size(Y, pagedimensions[1], 0)
+    X = get_size(X, pagedimensions[1][0], 0)
+    Y = get_size(Y, pagedimensions[1][1], 0)
 
     # Correct for Center
     X = X - (img.width/2)
@@ -205,8 +208,8 @@ def writeIcon(params):
 
     pagedimensions = GetPageDimensions()
 
-    X = get_size(X, pagedimensions[0], 0)
-    Y = get_size(Y, pagedimensions[1], 0)
+    X = get_size(X, pagedimensions[1][0], 0)
+    Y = get_size(Y, pagedimensions[1][1], 0)
 
     # Correct for Center
     X = X - (img.width/2)
@@ -288,7 +291,7 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     dwg.add(rect)
 
     # Text
-    if (contents != ""):
+    if ((contents is not None) and (contents != "")):
       dwg.add(dwg.text(
           contents,
           ((X+(W/2)), (Y+(H/2)+yalign)),
@@ -301,12 +304,18 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
 def SetupDraw(row):
   global dwg
   global mode
+
   checkBoxes()
+
+  pagedimensions = GetPageDimensions()
+  size = (str(pagedimensions[0][0])+"mm", str(pagedimensions[0][1])+"mm")
+  pixels = ("0 0 {} {}".format(pagedimensions[1][0], pagedimensions[1][1]))
 
   dwg = svgwrite.Drawing(
     str(svg_filename), 
     profile='full', 
-    size=GetPageDimensions(pagetype, pagedpi))
+    size=size,
+    viewBox=pixels)
   mode = "DRAW"
   return True
 
@@ -441,17 +450,17 @@ def DefineBox(params):
     return False
   themeentry = "BOX_"+boxname
   themes[themeentry] = {}
-  themes[themeentry]["BORDER COLOR"] = param_to_str(params,1)
-  themes[themeentry]["BORDER OPACITY"] = param_to_float(params,2)
-  themes[themeentry]["FILL COLOR"] = param_to_str(params,3)
-  themes[themeentry]["OPACITY"] = param_to_float(params,4)
-  themes[themeentry]["BORDER WIDTH"] = param_to_int(params,5)
-  themes[themeentry]["WIDTH"]       = param_to_int(params,6)
-  themes[themeentry]["HEIGHT"]      = param_to_int(params,7)
-  themes[themeentry]["CORNER RX"]   = param_to_int(params,8)
-  themes[themeentry]["CORNER RY"]   = param_to_int(params,9)
-  themes[themeentry]["SKEW"]        = param_to_int(params,10)
-  themes[themeentry]["SKEW OFFSET"] = param_to_int(params,11)
+  themes[themeentry]["BORDER COLOR"] = param_to_str(params,2)
+  themes[themeentry]["BORDER OPACITY"] = param_to_float(params,3)
+  themes[themeentry]["FILL COLOR"] = param_to_str(params,4)
+  themes[themeentry]["OPACITY"] = param_to_float(params,5)
+  themes[themeentry]["BORDER WIDTH"] = param_to_int(params,6)
+  themes[themeentry]["WIDTH"]       = param_to_int(params,7)
+  themes[themeentry]["HEIGHT"]      = param_to_int(params,8)
+  themes[themeentry]["CORNER RX"]   = param_to_int(params,9)
+  themes[themeentry]["CORNER RY"]   = param_to_int(params,10)
+  themes[themeentry]["SKEW"]        = param_to_int(params,11)
+  themes[themeentry]["SKEW OFFSET"] = param_to_int(params,12)
 
   return True
 
@@ -602,15 +611,28 @@ def writeText():
 
 def drawBox(params):
   global themes
+
   ok = True
   theme = param_to_str(params,1)
   X = param_to_size(params,2)
   Y = param_to_size(params,3)
   Width = param_to_size(params,4)
   Height = param_to_size(params,5)
-  justifyX   = param_to_str(params,7)
-  justifyY   = param_to_str(params,8)
-  message = param_to_str(params,9)
+  justifyX   = param_to_str(params,6)
+  justifyY   = param_to_str(params,7)
+  message = param_to_str(params,8)
+
+  pagedimensions = GetPageDimensions()
+
+  if (Width is not None) and (Width < 1):
+      print("HERE 1")
+      pprint(Width)
+      pprint(pagedimensions)
+      Width = round(get_size(Width,pagedimensions[1][0]))
+  if (Height is not None) and (Height < 1):
+      print("HERE 2")
+      Height = round(get_size(Height,pagedimensions[1][1]))
+  print("HERE 3")
 
   if (theme is None):
     print("Box Theme name parameter missing!")
@@ -624,17 +646,18 @@ def drawBox(params):
     print("Box Y Location missing!")
     ok = False
 
-  if ((justifyX is not None) and(justifyX not in VALIDJUSTIFYX)):
+  if ((justifyX is not None) and (justifyX not in VALIDJUSTIFYX)):
     print("ERROR: <Justify X> must be one of {}".format(VALIDJUSTIFY))
     ok = False
 
-  if ((justifyY is not None) and(justifyY not in VALIDJUSTIFYY)):
+  if ((justifyY is not None) and (justifyY not in VALIDJUSTIFYY)):
     print("ERROR: <Justify Y> must be one of {}".format(VALIDJUSTIFY))
     ok = False
 
   if (ok):
     TextBox(X, Y, "BOX_"+theme, message, justX=justifyX, justY=justifyY, W=Width, H=Height)
 
+  print(ok)
   return ok
 
 def DefineFont():
@@ -741,8 +764,6 @@ def main(arguments):
 
   overwrite = arguments['--overwrite']
   file_error = False
-
-  
 
   if (not csv_file.is_file()):
     print("ERROR: CSV File {} can not be found!".format(csv_file))
