@@ -1,3 +1,33 @@
 {
-    "python.pythonPath": "/home/steven/.virtualenvs/ESP32-MAXIO-PinoutGenerator/bin/python"
+    "python.pythonPath": "/home/steven/.virtualenvs/ESP32-MAXIO-PinoutGenerator/bin/python",
+    "cSpell.words": [
+        "csvfile",
+        "csvreader",
+        "datasheet",
+        "datasheets",
+        "docopt",
+        "fcsv",
+        "fsvg",
+        "googlefont",
+        "hstep",
+        "imgfile",
+        "inkscape",
+        "linewidth",
+        "maxio",
+        "mkdir",
+        "pfunc",
+        "pinfunc",
+        "pinout",
+        "pinset",
+        "pintext",
+        "pngdata",
+        "rect",
+        "svgwrite",
+        "tspan",
+        "validjustifyx",
+        "validjustifyy",
+        "xalign",
+        "xanchor",
+        "yalign"
+    ]
 }

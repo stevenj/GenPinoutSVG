@@ -1,13 +1,13 @@
 # GenPinoutSVG
 
 This repository contains a program to produce pinout SVG files from a CSV file
-source file of pin defintions and other graphical/format commands.
+source file of pin definitions and other graphical/format commands.
 
-This program was inspired by [https://github.com/sparkfun/Graphical_Datasheets]
+This program was inspired by [Graphical Datasheets](https://github.com/sparkfun/Graphical_Datasheets)
 
 ## How To Use
 
-This is a Python 3 program and has only been tested on V3.6.  It should be 
+This is a Python 3 program and has only been tested on V3.6.  It should be
 considered the minimum version for bug reports.
 
 1. Create a Python Virtual Environment
@@ -25,14 +25,14 @@ The CSV format is a simple list of drawing commands, at a higher level than raw 
 The basic format of the CSV file is:
 
 * \n (Carriage Return 0x13) is the Line Ender character
-* Fields are seperated with , (Comma)
+* Fields are separated with , (Comma)
 * If you put a comma inside a string, quote it with " (double quote)
-  
+
 Each line of the CSV is a command, with the following general format:
 
 * First Field = Command Name
 * Second to Nth Field = Options to the command
-  
+
 There are **TWO** Phases in the drawing process and the commands are divided by phase.  The first phase is the SETUP phase, which defines all the attributes of the page and drawing options, themes.  The Second phase is the DRAW phase and it is triggered by the DRAW command.
 
 DRAW Operations must occur in Draw Phase and Setup operations must occur in Setup phase.
@@ -68,7 +68,7 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * DEFAULT - Default Font, must be specified
     * \<type> - Optional Font for Types
     * \<group> - Optional Font for Pin Groups
-    * \<list> - Optional Font for each Pin Label 
+    * \<list> - Optional Font for each Pin Label
 * **FONT SIZE**, default, \<type>, \<group>, \<List of font sizes for each label>
   * Theme Font Size of Pin Type
     * DEFAULT - Default Font Size, must be specified
@@ -92,13 +92,13 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * DEFAULT - Default Font Boldness, must be specified
     * \<type> - Optional Font Boldness for Types
     * \<group> - Optional Font Boldness for Pin Groups
-    * \<list> - Optional Font Boldness for each Pin Label 
+    * \<list> - Optional Font Boldness for each Pin Label
 * **FONT STRETCH**, default, \<type>, \<group>, \<List of font stretch for each label>
   * Theme Font Stretch of Pin Type, possible stretch are: "normal", "wider", "narrower", "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded"
     * DEFAULT - Default Font Stretch, must be specified
     * \<type> - Optional Font Stretch for Types
     * \<group> - Optional Font Stretch for Pin Groups
-    * \<list> - Optional Font Stretch for each Pin Label 
+    * \<list> - Optional Font Stretch for each Pin Label
 * **TYPE**, **IO**, Color, Opacity
   * Sets the Color and Opacity IO pin Indicator
     * Color - The Color of the IO Pin Type indicator
@@ -133,31 +133,31 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * Thickness - The Thickness of a POWER Wire
 * **GROUP**, name, Color, Opacity
   * Sets the Name of a Pin group, and the Color and Opacity of the Pin Group Circle.
-    *  name - The name of the pin group
-    *  color - The color of the pin group
-    *  opacity - The opacity of the pin group
-* **BOX**, \<Name>, \<Border Color>, \<Border Opacity>, \<Fill Color>, \<Fill Opactiy>, \<Linewidth>, \<BoxWidth>, \<BoxHeight>, \<Box Cr X>, \<Box Cr Y>, \<Box Skew>, \<Box Skew Offset>
-    * Define a box theme
-        * Name - The name of the box theme
-        * Border Color - The color of the Border line around the box
-        * Border Opacity - Number 0.00-1.00 defines opacity of the border line
-        * Fill Color - Fill color of the box
-        * Fill Opacity - Opacity of the Fill (0.00-1.00), set to 0 for no fill
-        * Line Width - Width of the border line
-        * Box Width - Default width of the box
-        * Box Height - Default height of the box
-        * Box Cr X - Box Corner Radius (X Direction)
-        * Box Cr Y - Box Corner Radius (Y Direction)
-        * Box Skew - Amount of slant to pu on the box
+    * name - The name of the pin group
+    * color - The color of the pin group
+    * opacity - The opacity of the pin group
+* **BOX**, \<Name>, \<Border Color>, \<Border Opacity>, \<Fill Color>, \<Fill Opacity>, \<Linewidth>, \<BoxWidth>, \<BoxHeight>, \<Box Cr X>, \<Box Cr Y>, \<Box Skew>, \<Box Skew Offset>
+  * Define a box theme
+    * Name - The name of the box theme
+    * Border Color - The color of the Border line around the box
+    * Border Opacity - Number 0.00-1.00 defines opacity of the border line
+    * Fill Color - Fill color of the box
+    * Fill Opacity - Opacity of the Fill (0.00-1.00), set to 0 for no fill
+    * Line Width - Width of the border line
+    * Box Width - Default width of the box
+    * Box Height - Default height of the box
+    * Box Cr X - Box Corner Radius (X Direction)
+    * Box Cr Y - Box Corner Radius (Y Direction)
+    * Box Skew - Amount of slant to pu on the box
 * **TEXT FONT**, \<Theme Name>, \<Font>, \<Size>, \<Outline Color>, \<Color>, \<slant>, \<bold>, \<stretch>
   * Defines a Font for use by text entries. Text entries can also use a font theme for a labeled pin column
-* **PAGE**, "page name" 
+* **PAGE**, "page name"
   * Sets the page size Defaults to A4-L)
     * page name - Name of page, ("A4-P", "A4-L", "A3-P" or "A3-L")
 * **DPI**, dpi
-  * Sets the dots per inch. 
+  * Sets the dots per inch.
     * dpi - dots per inch on the page (Defaults to 300)
-* **DRAW** 
+* **DRAW**
   * Starts the Page Draw, Setup commands after this are ignored.  Draw commands before this are ignored.
 
 ### **DRAW** Phase Commands (Called before the **DRAW** Command)
@@ -173,7 +173,7 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * W/H = Width and Height to display at.
     * rot = Optional angle of rotation to apply
 * **ANCHOR**, X, Y
-  *  Sets Starting point for Pin Attribute display.
+  * Sets Starting point for Pin Attribute display.
     * X - X Coordinate of top left corner of first pin to show
     * Y - Y Coordinate of top left corner of first pin to show
 * **PINSET**, Side, Packed, JustifyX, JustifyY, LineStep, LeaderOffset, Column Gap, LeaderHStep
@@ -186,27 +186,27 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * LeaderOffset - Width of Leader Wire
     * Column Gap - Distance between adjacent boxes
     * LeaderHStep - allows the leader to be offset each line for vertical pins.
-* **PIN**, \<Wire>, \<TYPE>, \<GROUP>, \<List of Pin attribute  strings> 
+* **PIN**, \<Wire>, \<TYPE>, \<GROUP>, \<List of Pin attribute  strings>
   * Pin Attributes to print at next pin line.
     * Wire = The Wire Type (POWER/PWM/ANALOG/DIGITAL) Defaults to DIGITAL if not set.
     * TYPE = Pin Type (IO/INPUT/OUTPUT) Defaults to IO if not set.
-    * GROUP = Pin Group name. Defaults to ungrouped if not set.
+    * GROUP = Pin Group name. Defaults to un-grouped if not set.
     * List = List of pin functions, in order of defined Labels.
 * **PINTEXT**, \<Wire>, \<TYPE>, \<GROUP>, \<theme>, \<Text>
-  *  Text to print at next pin line.
-    *  Wire - The Wire Type (POWER/PWM/ANALOG/DIGITAL) Defaults to DIGITAL if not set.
-    *  TYPE - Pin Type (IO/INPUT/OUTPUT) Defaults to IO if not set.
-    *  GROUP - Pin Group. Defaults to ungrouped if not set.
-    *  theme - Theme to use when printing the text.
-    *  Text - The message to print
-* **BOX**, Theme, X, Y, \<BoxWidth>, \<BoxHeight>, \<X Justify>, \<Y Justify>, \<Text> 
-    * Draw a box at the required location.
-        * Theme - The box theme to draw with.
-        * X,Y - The Origin of the box (Top Left corner)
-        * Width/Height - Optional, if set override the themes box size
-        * X Justify - Optional, define Text justification in box, valid options are "LEFT", "RIGHT", "CENTER", defaults to "CENTER" if not set.
-        * Y Justify - Optional, define Text justification in box, valid options are "TOP", "BOTTOM", "CENTER", defaults to "CENTER" if not set.
-        * Text - Optional, Text to place inside the box.
+  * Text to print at next pin line.
+    * Wire - The Wire Type (POWER/PWM/ANALOG/DIGITAL) Defaults to DIGITAL if not set.
+    * TYPE - Pin Type (IO/INPUT/OUTPUT) Defaults to IO if not set.
+    * GROUP - Pin Group. Defaults to un-grouped if not set.
+    * theme - Theme to use when printing the text.
+    * Text - The message to print
+* **BOX**, Theme, X, Y, \<BoxWidth>, \<BoxHeight>, \<X Justify>, \<Y Justify>, \<Text>
+  * Draw a box at the required location.
+    * Theme - The box theme to draw with.
+    * X,Y - The Origin of the box (Top Left corner)
+    * Width/Height - Optional, if set override the themes box size
+    * X Justify - Optional, define Text justification in box, valid options are "LEFT", "RIGHT", "CENTER", defaults to "CENTER" if not set.
+    * Y Justify - Optional, define Text justification in box, valid options are "TOP", "BOTTOM", "CENTER", defaults to "CENTER" if not set.
+    * Text - Optional, Text to place inside the box.
 * **MESSAGE**, \<X>, \<Y>, \<Line Step>, \<Font>, \<Font Size>, \<X Justify>, \<Y Justify>
   * Text Message Options.  Any missing options use the previously set value, and do not reset.
     * X - Origin of text to print
@@ -217,13 +217,14 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * X Justify - Font alignment in X Direction
     * Y Justify - Font alignment in Y Direction
 * **TEXT**, \<edge color>, \<color>, \<Message>, \<NL>
-  *  Arbitrary Line of Text, using MESSAGE options.
-    *  edge color - Color of Font Outline
-    *  color - Color of Font body
-    *  Message - Text to display
-    *  NL - If present causes the line to advance to the next line.
+  * Arbitrary Line of Text, using MESSAGE options.
+    * edge color - Color of Font Outline
+    * color - Color of Font body
+    * Message - Text to display
+    * NL - If present causes the line to advance to the next line.
 * **END MESSAGE**
   * Terminates the previous multi-line message
+
 ## License
 
 This code is licensed under GPL-3.  See [GPL-3](gpl-3.0.md) for Details.

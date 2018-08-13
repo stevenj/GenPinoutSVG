@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ESP32-MAXIO Pinout SVG Generator
+"""Pinout SVG Generator
 
 Usage:
   GenPinoutSVG.py <filename.csv> [--overwrite]
@@ -75,7 +75,7 @@ def EmptyRow(row):
 
 def GetPageDimensions(pagetype=pagetype, dpi=pagedpi):
   if (pagetype not in pagedimensions):
-    print("ERROR: Unkown Page Type {}. Defaulting to 'A4-L'".format(pagetype))
+    print("ERROR: Unknown Page Type {}. Defaulting to 'A4-L'".format(pagetype))
     pagetype = "A4-L"
 
   pagesize = (pagedimensions[pagetype][0], pagedimensions[pagetype][1])
@@ -185,7 +185,7 @@ def writeImage(params):
     X = X - (img.width/2)
     Y = Y - (img.height/2)
 
-    image = dwg.add(dwg.image(href=(pngdata), insert=(X,Y)))
+    dwg.add(dwg.image(href=(pngdata), insert=(X,Y)))
   return True
 
 def writeIcon(params):
@@ -231,7 +231,7 @@ def writeIcon(params):
     icon = dwg.image(href=(pngdata), insert=(X,Y), size=(W,H))
     icon.rotate(rot)
 
-    image = dwg.add(icon)
+    dwg.add(icon)
   return True
   
 def GetTheme(theme, element, default=None):
