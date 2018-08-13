@@ -49,6 +49,18 @@ pin_func_types=None  # Pin function types (Columns for Pin Description)
 
 themes={}            # Configured themes
 linesettings={}      # Line settings
+messagesettings={    # Text message settings
+  "X" : 0,
+  "Y" : 0,
+  "OffsetX" : 0,
+  "OffsetY" : 0,
+  "LineStep" : 0,
+  "Font"     : "",
+  "FontSize" : 0,
+  "XJustify" : "center",
+  "YJustify" : "center",
+  "SVGText"  : None,
+}
 
 AnchorX = 0
 AnchorY = 0
@@ -273,7 +285,6 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     corner_rx    = GetTheme(boxtheme,"Corner RX", 0)
     corner_ry    = GetTheme(boxtheme,"Corner RY", 0)
     skew         = GetTheme(boxtheme,"Skew",0)
-    skew_shift   = GetTheme(boxtheme,"Skew Offset",0)
 
     if (justX == "LEFT"):
       xanchor = 'start'
@@ -296,7 +307,7 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
 
     # Box
     rect = boxgroup.add(dwg.rect(
-        (-W/2, -H/2), (W, H), corner_rx, corner_ry,
+        ((0-W)/2, (0-H)/2), (W, H), corner_rx, corner_ry,
         stroke = border_color, fill_opacity = opacity, fill = fill_color,
         stroke_width = border_width, stroke_opacity = border_opacity
         ))
@@ -419,12 +430,17 @@ def SetDPI(row):
     return False
   return True
 
+PINWIRES = [
+  "DIGITAL",
+  "PWM",
+  "ANALOG",
+  "POWER"
+]
+
 PINTYPES = [
   "IO",
   "INPUT",
   "OUTPUT",
-  "PWM",
-  "ANALOG"
 ]
 
 def SetPinType(row):
@@ -442,6 +458,28 @@ def SetPinType(row):
       themes[themeentry]["OPACITY"] = opacity
   else:
     print ("ERROR: <pintype> must be one of {}".format(PINTYPES))
+    return False
+  return True
+
+def SetWireType(row):
+  global themes
+
+  if (row[1] in PINWIRES):
+    themeentry = "PINWIRE_"+row[1]
+    color   = param_to_str(row, 2)
+    opacity = param_to_float(row, 3)
+    thickness = param_to_int(row, 4)
+
+    themes[themeentry] = { }
+
+    if (color is not None):
+      themes[themeentry]["FILL COLOR"] = color
+    if (opacity is not None):
+      themes[themeentry]["OPACITY"] = opacity
+    if (thickness is not None):
+      themes[themeentry]["THICKNESS"] = opacity
+  else:
+    print ("ERROR: <wiretype> must be one of {}".format(PINWIRES))
     return False
   return True
 
@@ -478,7 +516,6 @@ def DefineBox(params):
   themes[themeentry]["CORNER RX"]   = param_to_int(params,9)
   themes[themeentry]["CORNER RY"]   = param_to_int(params,10)
   themes[themeentry]["SKEW"]        = param_to_int(params,11)
-  themes[themeentry]["SKEW OFFSET"] = param_to_int(params,12)
 
   return True
 
@@ -538,11 +575,11 @@ def StartPinSet(params):
     valid = False
 
   if justifyX not in VALIDJUSTIFYX:
-    print("ERROR: <Justify X> must be one of {}".format(VALIDJUSTIFY))
+    print("ERROR: <Justify X> must be one of {}".format(VALIDJUSTIFYX))
     valid = False
 
   if justifyY not in VALIDJUSTIFYY:
-    print("ERROR: <Justify Y> must be one of {}".format(VALIDJUSTIFY))
+    print("ERROR: <Justify Y> must be one of {}".format(VALIDJUSTIFYY))
     valid = False
 
   if valid:   
@@ -579,7 +616,7 @@ def writePins(params):
     print("Error: Line not setup with prior PINSET!")
     return False
 
-  icon = param_to_str(params,1)
+  wire = param_to_str(params,1)
   pintype = param_to_str(params,2)
   pingroup = param_to_str(params,3)
 
@@ -606,7 +643,50 @@ def writePins(params):
   return ok
 
 def writePinText(params):
-  return False
+  global OffsetX
+  global OffsetY
+  global AnchorX
+  global AnchorY
+
+  ok = True
+
+  if linesettings == {}:
+    print("Error: Line not setup with prior PINSET!")
+    return False
+
+  wire = param_to_str(params,1)
+  pintype = param_to_str(params,2)
+  pingroup = param_to_str(params,3)
+  theme = param_to_str(params,4)
+  message = param_to_str(params,5)
+
+  font         = GetTheme(theme,"Font",'sans-serif')
+  fontsize     = GetTheme(theme,"Font Size",10)
+  fontcolor    = GetTheme(theme,"Font Color",'yellow')
+  fontslant    = GetTheme(theme,"Font Slant","normal")
+  fontbold     = GetTheme(theme,"Font Bold","normal")
+  fontstretch  = GetTheme(theme,"Font Stretch","normal")
+
+  if linesettings["SIDE"] == "LEFT":
+    xanchor = "end"
+  else:
+    xanchor = "start"
+  lineheight = linesettings["LINESTEP"]
+
+  # printPin - Draw the Pin Icon and Leader line
+
+  if (message is not None) and (message != ""):
+    dwg.add(dwg.text(
+      message,
+      (AnchorX + OffsetX, AnchorY + OffsetY + (lineheight/2)  ),
+          font_size = fontsize, font_family=font, fill = fontcolor,
+          font_style = fontslant,
+          font_weight = fontbold,
+          font_stretch = fontstretch,
+          text_anchor=xanchor))   
+
+  OffsetY += lineheight
+  return ok
 
 def EmbedGoogleFontLink(params):
   link   = param_to_str(params,1)
@@ -620,11 +700,85 @@ def EmbedGoogleFontLink(params):
     return False
   return True
 
-def StartTextMessage():
-  pass
+def StartTextMessage(params):
+  global messagesettings
 
-def writeText():
-  pass
+  EndTextMessage()
+
+  X = param_to_int(params, 1)
+  Y = param_to_int(params, 2)
+  messagesettings["LineStep"] = param_to_int(params, 3, messagesettings["LineStep"])
+  messagesettings["Font"]     = param_to_str(params, 4, messagesettings["Font"])
+  messagesettings["FontSize"] = param_to_int(params, 5, messagesettings["FontSize"])
+  messagesettings["XJustify"] = param_to_str(params, 6, messagesettings["XJustify"])
+  messagesettings["YJustify"] = param_to_str(params, 7, messagesettings["YJustify"])
+  
+  if X is not None:
+    messagesettings["X"] = X
+    messagesettings["OffsetX"] = 0
+  
+  if Y is not None:
+    messagesettings["Y"] = Y
+    messagesettings["OffsetY"] = 0
+
+  if messagesettings["XJustify"] == "LEFT":
+    xanchor = "start"
+  elif messagesettings["XJustify"] == "RIGHT":
+    xanchor = "end"
+  else:
+    xanchor = "middle"
+
+  font = getFontTheme(messagesettings["Font"])
+
+  messagesettings["SVGText"] = dwg.text(
+      "",
+      insert=(messagesettings["X"] + messagesettings["OffsetX"], 
+      messagesettings["Y"] + messagesettings["OffsetY"]),
+      font_size = themes[font]["FONT SIZE"], 
+      font_family=themes[font]["FONT"], 
+      stroke = themes[font]["OUTLINE COLOR"],
+      fill = themes[font]["FONT COLOR"],
+      font_style = themes[font]["FONT SLANT"],
+      font_weight = themes[font]["FONT BOLD"],
+      font_stretch = themes[font]["FONT STRETCH"],
+      text_anchor = xanchor)
+  return True
+
+def writeText(params):
+  global messagesettings
+
+  if messagesettings["SVGText"] is None:
+    print("ERROR: No multiline text message started!")
+    return False
+
+  font = getFontTheme(messagesettings["Font"])
+
+  # Adds text to the multi line text message.
+  EdgeColor = param_to_str(params,"none")
+  Color = param_to_str(params,2,themes[font]["FONT COLOR"])
+  Message = param_to_str(params,3,"")
+  NL      = param_to_str(params,4,"")
+
+  messagesettings["SVGText"].tspan(Message,
+    stroke = EdgeColor,
+    fill = Color)
+
+  if NL == "NL":
+    messagesettings["OffsetY"] += messagesettings["LineStep"]
+    messagesettings["SVGText"].tspan("",
+      insert=(messagesettings["X"] + messagesettings["OffsetX"], 
+      messagesettings["Y"] + messagesettings["OffsetY"]))
+
+  return True
+
+def EndTextMessage(params=None):
+  global messagesettings
+
+  # Ends the multi line text message and embeds in the SVG.
+  if messagesettings["SVGText"] is not None:
+    dwg.add(messagesettings["SVGText"])
+  messagesettings["SVGText"] = None
+  return True
 
 def drawBox(params):
   global themes
@@ -659,11 +813,11 @@ def drawBox(params):
     ok = False
 
   if ((justifyX is not None) and (justifyX not in VALIDJUSTIFYX)):
-    print("ERROR: <Justify X> must be one of {}".format(VALIDJUSTIFY))
+    print("ERROR: <Justify X> must be one of {}".format(VALIDJUSTIFYX))
     ok = False
 
   if ((justifyY is not None) and (justifyY not in VALIDJUSTIFYY)):
-    print("ERROR: <Justify Y> must be one of {}".format(VALIDJUSTIFY))
+    print("ERROR: <Justify Y> must be one of {}".format(VALIDJUSTIFYY))
     ok = False
 
   if (ok):
@@ -671,45 +825,65 @@ def drawBox(params):
 
   return ok
 
-def DefineFont():
-  pass
+def DefineFont(params):
+  global themes
+  fontname = param_to_str(params,1)
+  if (fontname is None):
+    print("Error: Must specify font name")
+    return False
+  themeentry = "FONT_"+fontname
+  themes[themeentry] = {}
+  themes[themeentry]["FONT"]            = param_to_str(params,2)
+  themes[themeentry]["FONT SIZE"]       = param_to_int(params,3)
+  themes[themeentry]["OUTLINE COLOR"]   = param_to_str(params,4,"none")
+  themes[themeentry]["FONT COLOR"]      = param_to_str(params,5)
+  themes[themeentry]["FONT SLANT"]      = param_to_str(params,6)
+  themes[themeentry]["FONT BOLD"]       = param_to_str(params,7)
+  themes[themeentry]["FONT STRETCH"]    = param_to_str(params,8)
+
+  return True
+
+def getFontTheme(fontname):
+  if fontname in themes:
+    return fontname
+  return "FONT_"+fontname
 
 csvCommands = {
   "SETUP" : {
-    "DRAW"         : SetupDraw,
-    "LABELS"       : SetLabels,
-    "FILL COLOR"   : SetThemeStr,
-    "OPACITY"      : SetThemeFloat,
-    "BORDER COLOR" : SetThemeStr,
-    "BORDER WIDTH" : SetThemeInt,
+    "DRAW"           : SetupDraw,
+    "LABELS"         : SetLabels,
+    "FILL COLOR"     : SetThemeStr,
+    "OPACITY"        : SetThemeFloat,
+    "BORDER COLOR"   : SetThemeStr,
+    "BORDER WIDTH"   : SetThemeInt,
     "BORDER OPACITY" : SetThemeFloat,
-    "FONT"         : SetThemeStr,
-    "FONT SIZE"    : SetThemeInt,
-    "FONT COLOR"   : SetThemeStr,
-    "FONT SLANT"   : SetThemeStr,
-    "FONT BOLD"    : SetThemeStr,
-    "FONT STRETCH" : SetThemeStr,
-    "CORNER RX"    : SetThemeInt,
-    "CORNER RY"    : SetThemeInt,
-    "BOXES"        : SetThemeStr,
-    "PAGE"         : SetPageSize,
-    "DPI"          : SetDPI,
-    "TYPE"         : SetPinType,
-    "GROUP"        : SetPinGroup,
-    "BOX"          : DefineBox,
-    "TEXT FONT"    : DefineFont,
+    "FONT"           : SetThemeStr,
+    "FONT SIZE"      : SetThemeInt,
+    "FONT COLOR"     : SetThemeStr,
+    "FONT SLANT"     : SetThemeStr,
+    "FONT BOLD"      : SetThemeStr,
+    "FONT STRETCH"   : SetThemeStr,
+    "BOXES"          : SetThemeStr,
+    "PAGE"           : SetPageSize,
+    "DPI"            : SetDPI,
+    "TYPE"           : SetPinType,
+    "WIRE"           : SetWireType,
+    "GROUP"          : SetPinGroup,
+    "BOX"            : DefineBox,
+    "TEXT FONT"      : DefineFont,
   },
   "DRAW" : {
-    "GOOGLEFONT" : EmbedGoogleFontLink,
-    "IMAGE"      : writeImage,
-    "ICON"       : writeIcon,
-    "ANCHOR"     : moveAnchor,
-    "PINSET"     : StartPinSet,
-    "PIN"        : writePins,
-    "PINTEXT"    : writePinText,
-    "BOX"        : drawBox,
-    "MESSAGE"    : StartTextMessage,
-    "TEXT"       : writeText,
+    "GOOGLEFONT"  : EmbedGoogleFontLink,
+    "IMAGE"       : writeImage,
+    "ICON"        : writeIcon,
+    "ANCHOR"      : moveAnchor,
+    "PINSET"      : StartPinSet,
+    "PIN"         : writePins,
+    "PINTEXT"     : writePinText,
+    "BOX"         : drawBox,
+    "MESSAGE"     : StartTextMessage,
+    "TEXT"        : writeText,
+    "END MESSAGE" : EndTextMessage,
   }
 }
     
@@ -733,7 +907,7 @@ def ReadCSV(fcsv, fsvg):
   svg_filename = str(fsvg)
 
   with fcsv.open() as csvfile :
-    csvreader = csv.reader(csvfile, dialect='unix')
+    csvreader = csv.reader(csvfile, dialect='pinout')
     for row in csvreader:
       row = [entry.strip() for entry in row]  # Clean up extra spaces
 
@@ -756,6 +930,14 @@ def ReadCSV(fcsv, fsvg):
     dwg.save()
 
 def main(arguments):
+  csv.register_dialect('pinout',
+                     escapechar='\\',
+                     doublequote=False,
+                     quoting=csv.QUOTE_MINIMAL,
+                     lineterminator='\n',
+                     skipinitialspace=True
+                     )
+
   csv_file = Path(arguments['<filename.csv>'])
 
   if (arguments['<filename.svg>']):
