@@ -126,6 +126,11 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * Color - The Color of the ANALOG Wire
     * Opacity - The Opacity of ANALOG Wire
     * Thickness - The Thickness of a ANALOG Wire
+* **WIRE**, **HS-ANALOG**, Color, Opacity, Thickness
+  * Sets the Color, Opacity and Thickness of High Speed ANALOG Wires
+    * Color - The Color of the ANALOG Wire
+    * Opacity - The Opacity of ANALOG Wire
+    * Thickness - The Thickness of a ANALOG Wire
 * **WIRE**, **POWER**, Color, Opacity, Thickness
   * Sets the Color, Opacity and Thickness of POWER Wires
     * Color - The Color of the POWER Wire
@@ -176,13 +181,15 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
   * Sets Starting point for Pin Attribute display.
     * X - X Coordinate of top left corner of first pin to show
     * Y - Y Coordinate of top left corner of first pin to show
-* **PINSET**, Side, Packed, JustifyX, JustifyY, LineStep, LeaderOffset, Column Gap, LeaderHStep
+* **PINSET**, Side, Packed, JustifyX, JustifyY, LineStep, PinWidth, GroupWidth, LeaderOffset, Column Gap, LeaderHStep
   * Define a pin list.
     * Side - The side the pins are on.
     * Packed - Pins are listed Packed, or Columnar
     * JustifyX - How text aligns in the X Direction
     * JustifyY - How text aligns vertically
     * LineStep - Step between consecutive lines
+    * PinWidth - Width of the pin Indicator
+    * GroupWidth - Width of the pin Group Indicator
     * LeaderOffset - Width of Leader Wire
     * Column Gap - Distance between adjacent boxes
     * LeaderHStep - allows the leader to be offset each line for vertical pins.
@@ -192,11 +199,12 @@ DRAW Operations must occur in Draw Phase and Setup operations must occur in Setu
     * TYPE = Pin Type (IO/INPUT/OUTPUT) Defaults to IO if not set.
     * GROUP = Pin Group name. Defaults to un-grouped if not set.
     * List = List of pin functions, in order of defined Labels.
-* **PINTEXT**, \<Wire>, \<TYPE>, \<GROUP>, \<theme>, \<Text>
+* **PINTEXT**, \<Wire>, \<TYPE>, \<GROUP>, \<theme>, \<label> \<Text>
   * Text to print at next pin line.
     * Wire - The Wire Type (POWER/PWM/ANALOG/DIGITAL) Defaults to DIGITAL if not set.
     * TYPE - Pin Type (IO/INPUT/OUTPUT) Defaults to IO if not set.
     * GROUP - Pin Group. Defaults to un-grouped if not set.
+    * Label - First Column Label, prints first column box and this text.  If not present, first column box is not printed at all.
     * theme - Theme to use when printing the text.
     * Text - The message to print
 * **BOX**, Theme, X, Y, \<BoxWidth>, \<BoxHeight>, \<X Justify>, \<Y Justify>, \<Text>
