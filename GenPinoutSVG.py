@@ -27,7 +27,7 @@ import base64
 from pprint import pprint
 import urllib.request
 import math
-
+import traceback
 
 ################################################## GLOBAL VARIABLES ########################################
 pagedimensions = {
@@ -50,10 +50,12 @@ pin_func_types=None  # Pin function types (Columns for Pin Description)
 themes={}            # Configured themes
 linesettings={}      # Line settings
 messagesettings={    # Text message settings
+  "Newline" : False,
   "X" : 0,
   "Y" : 0,
   "OffsetX" : 0,
   "OffsetY" : 0,
+  "YShift"  : 0,
   "LineStep" : 0,
   "Font"     : "",
   "FontSize" : 0,
@@ -73,7 +75,17 @@ def EmptyRow(row):
       return False
   return True
 
-def GetPageDimensions(pagetype=pagetype, dpi=pagedpi):
+def GetPageDimensions(pagesize=None, dpi=None):
+  global pagetype
+  global pagedpi
+  global pagedimensions
+
+  if (pagesize is None):
+    pagesize = pagetype
+
+  if (dpi is None):
+    dpi = pagedpi
+
   if (pagetype not in pagedimensions):
     print("ERROR: Unknown Page Type {}. Defaulting to 'A4-L'".format(pagetype))
     pagetype = "A4-L"
@@ -157,7 +169,7 @@ def writeImage(params):
   with Image(filename=str(imgfile)) as img:
     # Crop
     if (cx is not None) and (cy is not None) and (cw is not None) and (ch is not None):
-      img.crop(left=cx, right=cy, width=cw, height=ch)
+      img.crop(left=cx, top=cy, width=cw, height=ch)
     elif (cx is not None) or (cy is not None) or (cw is not None) or (ch is not None):
       print("ERROR: Crop Parameter Missing, <cx>, <cy>, <cw>, <ch> must all be specified, or NONE!")
       return False
@@ -249,6 +261,22 @@ def GetTheme(theme, element, default=None):
   except:
     return default
 
+def GetBoxTheme(theme, entry, default):
+  if not theme.startswith("BOX_"):
+    boxname      = GetTheme(theme,"BOXES","STD")
+    if (boxname is None):
+      boxtheme = theme
+    else:
+      boxtheme = "BOX_"+boxname
+  else:
+    boxtheme = theme
+
+  if boxtheme not in themes:
+    print("ERROR: BOX Theme {} not known!".format(boxtheme))
+    return default
+
+  return GetTheme(boxtheme, entry, default)
+
 # Creates colored blocks and text for fields
 def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=None):
     global dwg
@@ -265,26 +293,15 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     fontslant    = GetTheme(theme,"Font Slant","normal")
     fontbold     = GetTheme(theme,"Font Bold","normal")
     fontstretch  = GetTheme(theme,"Font Stretch","normal")
-
-    boxname      = GetTheme(theme,"BOXES")
-    if (boxname is None):
-      boxtheme = theme
-    else:
-      boxtheme = "BOX_"+boxname
-
-    if boxtheme in themes:
-      boxtheme = "BOX_"+boxname
-    else:
-      print("ERROR: BOX Theme {} not known!".format(boxtheme))
-      return False
-
+    fontoutline  = GetTheme(theme,"Font Outline",fontcolor)
+    fontoutthick = GetTheme(theme,"Font Outline Thickness",0.0)
     if (W is None):
-      W            = GetTheme(boxtheme,"Width", 0)
+      W            = GetBoxTheme(theme,"Width", 0)
     if (H is None):
-      H            = GetTheme(boxtheme,"Height", 0)
-    corner_rx    = GetTheme(boxtheme,"Corner RX", 0)
-    corner_ry    = GetTheme(boxtheme,"Corner RY", 0)
-    skew         = GetTheme(boxtheme,"Skew",0)
+      H            = GetBoxTheme(theme,"Height", 0)
+    corner_rx    = GetBoxTheme(theme,"Corner RX", 0)
+    corner_ry    = GetBoxTheme(theme,"Corner RY", 0)
+    skew         = GetBoxTheme(theme,"Skew",0)
 
     if (justX == "LEFT"):
       xanchor = 'start'
@@ -295,6 +312,7 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
     else:
       xanchor = 'middle'
       xalign = 0
+
 
     if (justY == "TOP"):
       yalign = -(H/2)+(fontsize)
@@ -315,15 +333,44 @@ def TextBox(X, Y, theme, contents, justX="CENTER", justY="CENTER", W=None, H=Non
       rect.skewX(skew)
 
     # Text
+    if (fontoutthick > 0):
+      fontoutopacity = 1
+    else:
+      fontoutopacity = 0
+
     if ((contents is not None) and (contents != "")):
+      lines = contents.split("\\n")
+      if len(lines) == 1: # Single Line
+        yalign1 = yalign
+        yalign2 = -1
+      else:
+        yalign1 = yalign - (H/5)
+        yalign2 = yalign + (H/5)
+
       boxgroup.add(dwg.text(
-          contents,
-          (xalign, yalign),
+          lines[0],
+          (xalign, yalign1),
           font_size = fontsize, font_family=font, fill = fontcolor,
           font_style = fontslant,
           font_weight = fontbold,
           font_stretch = fontstretch,
+          stroke = fontoutline,
+          stroke_opacity = fontoutopacity,
+          stroke_width = fontoutthick,
           text_anchor=xanchor))               
+      
+      if (yalign2 >= 0):
+        boxgroup.add(dwg.text(
+            lines[1],
+            (xalign, yalign2),
+            font_size = fontsize, font_family=font, fill = fontcolor,
+            font_style = fontslant,
+            font_weight = fontbold,
+            font_stretch = fontstretch,
+            stroke = fontoutline,
+            stroke_opacity = fontoutopacity,
+            stroke_width = fontoutthick,
+            text_anchor=xanchor))               
 
     boxgroup.translate(X+(W/2),Y+(H/2))
 
@@ -434,6 +481,7 @@ PINWIRES = [
   "DIGITAL",
   "PWM",
   "ANALOG",
+  "HS-ANALOG",
   "POWER"
 ]
 
@@ -477,7 +525,7 @@ def SetWireType(row):
     if (opacity is not None):
       themes[themeentry]["OPACITY"] = opacity
     if (thickness is not None):
-      themes[themeentry]["THICKNESS"] = opacity
+      themes[themeentry]["THICKNESS"] = thickness
   else:
     print ("ERROR: <wiretype> must be one of {}".format(PINWIRES))
     return False
@@ -561,10 +609,12 @@ def StartPinSet(params):
   packing = param_to_str(params,2,"UNPACKED").upper()
   justifyX = param_to_str(params,3,"CENTER").upper()
   justifyY = param_to_str(params,4,"CENTER").upper()
-  linestep = param_to_int(params,5,10)
-  leader   = param_to_int(params,6,10)
-  gap      = param_to_int(params,7,10)
-  hstep    = param_to_int(params,8,0)
+  linestep = param_to_float(params,5,10)
+  pinwidth = param_to_int(params,6,10)
+  groupwidth = param_to_int(params,7,20)
+  leader   = param_to_int(params,8,10)
+  gap      = param_to_int(params,9,10)
+  hstep    = param_to_int(params,10,0)
 
   if side not in VALIDSIDES:
     print("ERROR: <Side> must be one of {}".format(VALIDSIDES))
@@ -588,6 +638,8 @@ def StartPinSet(params):
     linesettings["PACK"]     = (packing == "PACKED")
     linesettings["JUSTIFY X"]  = justifyX
     linesettings["JUSTIFY Y"]  = justifyY
+    linesettings["PINWIDTH"]   = pinwidth
+    linesettings["GROUPWIDTH"] = groupwidth
     linesettings["LINESTEP"] = linestep
     linesettings["LEADER"]   = leader
     linesettings["GAP"]      = gap
@@ -595,22 +647,173 @@ def StartPinSet(params):
 
   return valid
 
-def writePins(params):
-  def incOffsetX(X,side,theme):
-    boxtheme = "BOX_"+GetTheme(theme,"Boxes","STD")
-    if ((side == "LEFT") or (side == "TOP LEFT") or (side == "BOTTOM LEFT")):
-      X = X - (linesettings["GAP"] + GetTheme(boxtheme,"Width",0))
-    elif ((side == "RIGHT") or (side == "TOP RIGHT") or (side == "BOTTOM RIGHT")):
-      X = X + (linesettings["GAP"] + GetTheme(boxtheme,"Width",0))
-    return X
+def incOffsetX(X,side,theme):
+  XSpan = linesettings["GAP"] + GetBoxTheme(theme,"Width",0)
+  if "LEFT" in side:
+    X = X - XSpan
+  elif "RIGHT" in side:
+    X = X + XSpan
+  return X
+
+def printPin(pintype, wire, pingroup):
   global OffsetX
   global OffsetY
   global AnchorX
   global AnchorY
+  global linesettings
+  global themes
+  global dwg
 
   ok = True
 
-  # PIN, <Icon>, <TYPE>, <GROUP>, <List of Pin attribute strings>   - Pin Attributes to print at next pin line.
+  pinWidth   = linesettings["PINWIDTH"]
+  groupWidth = linesettings["GROUPWIDTH"]
+  leaderOffset = linesettings["LEADER"]
+  hstep        = linesettings["hstep"]
+  pinBoxOffset = OffsetX+(groupWidth/2)
+  if "RIGHT" in linesettings["SIDE"]:
+    pinCenterX = AnchorX+pinBoxOffset
+  else:                
+    pinCenterX = AnchorX-pinBoxOffset
+
+  pinCenterY = AnchorY+OffsetY + (linesettings["LINESTEP"]/2)
+
+  if (pingroup is not None):
+    grouptheme = "GROUP_"+pingroup
+    if  grouptheme in themes:
+      dwg.add(dwg.circle(
+        center=(pinCenterX, pinCenterY),
+        r = groupWidth/2,
+        stroke = "black",
+        stroke_width="2",
+        stroke_opacity="1",
+        fill = themes[grouptheme]["FILL COLOR"],
+        fill_opacity = themes[grouptheme]["OPACITY"]
+      ))
+    else:
+      print("Error:PinGroup {} is not defined".format(pingroup))
+      ok = False
+
+  if (pintype == "IO"):
+    dwg.add(dwg.circle(
+      center=(pinCenterX, pinCenterY),
+      r = pinWidth/2,
+      stroke = "black",
+      color = "black",
+      opacity = 1
+    ))
+  else:
+    triangle_edge_length = (pinWidth/2) * math.sqrt(3)
+    triangle_center_shift = pinWidth / 4
+
+    if ((("LEFT" in linesettings["SIDE"]) and (pintype == "OUTPUT")) or
+        (("RIGHT" in linesettings["SIDE"]) and (pintype == "INPUT"))):
+      points = [(triangle_center_shift,triangle_edge_length/2),
+                (triangle_center_shift,-triangle_edge_length/2),
+                (-pinWidth/2,0)]
+    else:
+      points = [(-triangle_center_shift,triangle_edge_length/2),
+                (-triangle_center_shift,-triangle_edge_length/2),
+                (pinWidth/2,0)]
+
+    trianglegroup = dwg.g()
+    trianglegroup.add(dwg.polygon(
+      points=points,
+      stroke = "black",
+      fill = "black",
+      opacity = 1
+    ))
+
+    trianglegroup.translate(pinCenterX,pinCenterY)
+    dwg.add(trianglegroup)
+
+  pinWidth = groupWidth + leaderOffset
+
+  if leaderOffset > 0:
+    leadergroup = dwg.g()
+    color = GetTheme("PINWIRE_"+wire,"FILL COLOR","black")
+    opacity = GetTheme("PINWIRE_"+wire,"OPACITY",1)
+    thickness = GetTheme("PINWIRE_"+wire,"THICKNESS",1)   
+
+    if wire == "PWM" :
+      # Square Wave
+      step = leaderOffset/4
+      points = [(0,0),
+                (step,0),
+                (step,-groupWidth/2),
+                (step*2,-groupWidth/2),
+                (step*2,groupWidth/2),
+                (step*3,groupWidth/2),
+                (step*3,0),
+                (step*4,0)
+                ]
+    elif (wire == "ANALOG") or (wire == "HS-ANALOG"):
+      if wire == "ANALOG":
+        maxangle=360
+      else:
+        maxangle=720
+
+      step = leaderOffset/4
+      sinewidth = int(step*2)
+
+      points = [(0,0),
+                (step,0)]
+
+      for i in [x / 10.0 for x in range(0, sinewidth*10, 1)]:
+        x = i + step
+        y = math.sin(math.radians((maxangle/sinewidth) * i))*(-groupWidth/2)
+        points += [(x,y)]
+      points += [(step*4,0)]
+    else: # POWER and DIGITAL are the same, just a line.
+      points = [(0,0), 
+                (leaderOffset,0)]
+
+    leadergroup.add(dwg.polyline(points,
+                            fill="none",
+                            stroke=color,
+                            opacity=opacity,
+                            stroke_width=thickness))
+
+    if "LEFT" in linesettings["SIDE"]:
+      leadergroup.translate(pinCenterX-(groupWidth/2)-leaderOffset,pinCenterY)
+    else:
+      leadergroup.translate(pinCenterX+(groupWidth/2),pinCenterY)
+
+    dwg.add(leadergroup)
+
+  if "LEFT" in linesettings["SIDE"]:
+    return 0-pinWidth
+  return pinWidth
+
+def writePinGeneric(params, text=False):
+  global OffsetY
+
+  def getPinBoxXY(BoxOffsetX, theme, LineHeight):
+      
+    global OffsetX
+    global OffsetY
+    global AnchorX
+    global AnchorY
+    global linesettings
+
+    X = AnchorX+OffsetX+BoxOffsetX
+    # On the Left side we need to pre-decrement the X coordinate
+    # otherwise we align to the wrong box edge.
+    if "LEFT" in linesettings["SIDE"]:
+      X = X - GetBoxTheme(theme,"Width",0)
+
+    Y = AnchorY+OffsetY
+    BoxHeight = GetBoxTheme(theme,"Height", 0)
+    if (linesettings["JUSTIFY Y"] == "CENTER"):
+      Y = Y + ((LineHeight - BoxHeight)/2)
+    elif (linesettings["JUSTIFY Y"] == "BOTTOM"):
+      Y = Y + (LineHeight - BoxHeight)
+    else: # Top
+      pass
+
+    return (X,Y)
+
+  ok = True
 
   if linesettings == {}:
     print("Error: Line not setup with prior PINSET!")
@@ -620,73 +823,76 @@ def writePins(params):
   pintype = param_to_str(params,2)
   pingroup = param_to_str(params,3)
 
+
   # printPin - Draw the Pin Icon and Leader line
+  BoxOffsetX = printPin(pintype, wire, pingroup)
+  LineHeight = linesettings["LINESTEP"]
 
-  BoxOffsetX = 0
+  if text:
+    label    = param_to_str(params,4)
+    msgtheme = param_to_str(params,5)
+    message  = param_to_str(params,6)
+    font         = GetTheme(msgtheme,"Font",'sans-serif')
+    fontsize     = GetTheme(msgtheme,"Font Size",10)
+    fontcolor    = GetTheme(msgtheme,"Font Color",'yellow')
+    fontslant    = GetTheme(msgtheme,"Font Slant","normal")
+    fontbold     = GetTheme(msgtheme,"Font Bold","normal")
+    fontstretch  = GetTheme(msgtheme,"Font Stretch","normal")
 
-  for index, item in enumerate(params[4:]):
-    if (index < len(pin_func_types)):
-      pinfunc = param_to_str(params,index+4)
-      theme = pin_func_types[index]
-
-      if (pinfunc is not None):
-        TextBox(AnchorX+OffsetX+BoxOffsetX,AnchorY+OffsetY, theme, pinfunc,    linesettings["JUSTIFY X"], linesettings["JUSTIFY Y"])
-        BoxOffsetX = incOffsetX(BoxOffsetX,linesettings["SIDE"],theme)
-      elif (not linesettings["PACK"]):
-        BoxOffsetX = incOffsetX(BoxOffsetX,linesettings["SIDE"],theme)
+    if "LEFT" in linesettings["SIDE"]:
+      xanchor = "end"
     else:
-      print("WARNING: Too many entries on line, extra entries discarded!")        
-      ok = False
-      break
+      xanchor = "start"
+
+    # print first box label
+    if (label is not None):
+      theme = pin_func_types[0]
+
+      X,Y = getPinBoxXY(BoxOffsetX, theme, LineHeight)
+
+      TextBox(X,Y, theme, label, linesettings["JUSTIFY X"], linesettings["JUSTIFY Y"])
+      if "RIGHT" in linesettings["SIDE"]:
+        BoxOffsetX = incOffsetX(BoxOffsetX,linesettings["SIDE"],theme)
+
+    if (message is not None) and (message != ""):
+      X,Y = getPinBoxXY(BoxOffsetX, theme, LineHeight)
+
+      if "LEFT" in linesettings["SIDE"]:
+        X = X - linesettings["GAP"]
+
+      dwg.add(dwg.text(
+        message,
+        (X, Y + (LineHeight/2)  ),
+        font_size = fontsize, font_family=font, fill = fontcolor,
+        font_style = fontslant,
+        font_weight = fontbold,
+        font_stretch = fontstretch,
+        text_anchor=xanchor))   
+  else:
+    for index, item in enumerate(params[4:]):
+      if (index < len(pin_func_types)):
+        pinfunc = param_to_str(params,index+4)
+        theme = pin_func_types[index]
+
+        if (pinfunc is not None):
+          X,Y = getPinBoxXY(BoxOffsetX, theme, LineHeight)
+          TextBox(X,Y, theme, pinfunc, linesettings["JUSTIFY X"], linesettings["JUSTIFY Y"])
+          BoxOffsetX = incOffsetX(BoxOffsetX,linesettings["SIDE"],theme)
+        elif (not linesettings["PACK"]):
+          BoxOffsetX = incOffsetX(BoxOffsetX,linesettings["SIDE"],theme)
+      else:
+        print("WARNING: Too many entries on line, extra entries discarded!")        
+        ok = False
+        break
 
   OffsetY += linesettings["LINESTEP"]
   return ok
 
+def writePins(params):
+  return writePinGeneric(params)
+
 def writePinText(params):
-  global OffsetX
-  global OffsetY
-  global AnchorX
-  global AnchorY
-
-  ok = True
-
-  if linesettings == {}:
-    print("Error: Line not setup with prior PINSET!")
-    return False
-
-  wire = param_to_str(params,1)
-  pintype = param_to_str(params,2)
-  pingroup = param_to_str(params,3)
-  theme = param_to_str(params,4)
-  message = param_to_str(params,5)
-
-  font         = GetTheme(theme,"Font",'sans-serif')
-  fontsize     = GetTheme(theme,"Font Size",10)
-  fontcolor    = GetTheme(theme,"Font Color",'yellow')
-  fontslant    = GetTheme(theme,"Font Slant","normal")
-  fontbold     = GetTheme(theme,"Font Bold","normal")
-  fontstretch  = GetTheme(theme,"Font Stretch","normal")
-
-  if linesettings["SIDE"] == "LEFT":
-    xanchor = "end"
-  else:
-    xanchor = "start"
-  lineheight = linesettings["LINESTEP"]
-
-  # printPin - Draw the Pin Icon and Leader line
-
-  if (message is not None) and (message != ""):
-    dwg.add(dwg.text(
-      message,
-      (AnchorX + OffsetX, AnchorY + OffsetY + (lineheight/2)  ),
-          font_size = fontsize, font_family=font, fill = fontcolor,
-          font_style = fontslant,
-          font_weight = fontbold,
-          font_stretch = fontstretch,
-          text_anchor=xanchor))   
-
-  OffsetY += lineheight
-  return ok
+  return writePinGeneric(params,True)
 
 def EmbedGoogleFontLink(params):
   link   = param_to_str(params,1)
@@ -707,7 +913,7 @@ def StartTextMessage(params):
 
   X = param_to_int(params, 1)
   Y = param_to_int(params, 2)
-  messagesettings["LineStep"] = param_to_int(params, 3, messagesettings["LineStep"])
+  messagesettings["LineStep"] = param_to_float(params, 3, messagesettings["LineStep"])
   messagesettings["Font"]     = param_to_str(params, 4, messagesettings["Font"])
   messagesettings["FontSize"] = param_to_int(params, 5, messagesettings["FontSize"])
   messagesettings["XJustify"] = param_to_str(params, 6, messagesettings["XJustify"])
@@ -728,24 +934,34 @@ def StartTextMessage(params):
   else:
     xanchor = "middle"
 
+  if messagesettings["YJustify"] == "TOP":
+    messagesettings["YShift"] = messagesettings["FontSize"]/2
+  elif messagesettings["XJustify"] == "BOTTOM":
+    messagesettings["YShift"] = 0-(messagesettings["FontSize"]/2)
+  else:
+    messagesettings["YShift"] = 0
+
+  messagesettings["Newline"] = False
+
   font = getFontTheme(messagesettings["Font"])
 
   messagesettings["SVGText"] = dwg.text(
       "",
       insert=(messagesettings["X"] + messagesettings["OffsetX"], 
-      messagesettings["Y"] + messagesettings["OffsetY"]),
-      font_size = themes[font]["FONT SIZE"], 
-      font_family=themes[font]["FONT"], 
-      stroke = themes[font]["OUTLINE COLOR"],
-      fill = themes[font]["FONT COLOR"],
-      font_style = themes[font]["FONT SLANT"],
-      font_weight = themes[font]["FONT BOLD"],
-      font_stretch = themes[font]["FONT STRETCH"],
+      messagesettings["Y"] + messagesettings["OffsetY"] +  + messagesettings["YShift"]),
+      font_size = messagesettings["FontSize"], 
+      font_family=GetTheme(font,"Font",'sans-serif'), 
+      stroke = GetTheme(font,"Outline Color",'none'),
+      fill = GetTheme(font,"Font Color",'black'),
+      font_style = GetTheme(font,"Font Slant","normal"),
+      font_weight = GetTheme(font,"Font Bold","normal"),
+      font_stretch = GetTheme(font,"Font Stretch","normal"),
       text_anchor = xanchor)
   return True
 
 def writeText(params):
   global messagesettings
+  global dwg
 
   if messagesettings["SVGText"] is None:
     print("ERROR: No multiline text message started!")
@@ -754,20 +970,28 @@ def writeText(params):
   font = getFontTheme(messagesettings["Font"])
 
   # Adds text to the multi line text message.
-  EdgeColor = param_to_str(params,"none")
-  Color = param_to_str(params,2,themes[font]["FONT COLOR"])
+  EdgeColor = param_to_str(params,1,"none")
+  Color = param_to_str(params,2,GetTheme(font,"Font Color",'black'))
   Message = param_to_str(params,3,"")
   NL      = param_to_str(params,4,"")
 
-  messagesettings["SVGText"].tspan(Message,
-    stroke = EdgeColor,
-    fill = Color)
+  if messagesettings["Newline"]:
+    messagesettings["Newline"] = False
+    tspan = dwg.tspan(Message,
+      insert=(messagesettings["X"] + messagesettings["OffsetX"], 
+      messagesettings["Y"] + messagesettings["OffsetY"] + messagesettings["YShift"]),
+      stroke = EdgeColor,
+      fill = Color)
+  else:
+    tspan = dwg.tspan(Message,
+      stroke = EdgeColor,
+      fill = Color)
+
+  messagesettings["SVGText"].add(tspan)
 
   if NL == "NL":
+    messagesettings["Newline"] = True
     messagesettings["OffsetY"] += messagesettings["LineStep"]
-    messagesettings["SVGText"].tspan("",
-      insert=(messagesettings["X"] + messagesettings["OffsetX"], 
-      messagesettings["Y"] + messagesettings["OffsetY"]))
 
   return True
 
@@ -863,6 +1087,8 @@ csvCommands = {
     "FONT SLANT"     : SetThemeStr,
     "FONT BOLD"      : SetThemeStr,
     "FONT STRETCH"   : SetThemeStr,
+    "FONT OUTLINE"   : SetThemeStr,
+    "FONT OUTLINE THICKNESS" : SetThemeFloat,
     "BOXES"          : SetThemeStr,
     "PAGE"           : SetPageSize,
     "DPI"            : SetDPI,
@@ -917,16 +1143,24 @@ def ReadCSV(fcsv, fsvg):
         # And commented out commands
         continue
       try:
-        lineError = not csvCommands[mode][row[0]](row)
+        cmd = csvCommands[mode][row[0]]
       except KeyError:
          print("Error: Unknown {} Command!".format(mode))
          lineError = True
 
+      if not lineError:
+        try:
+          lineError = not cmd(row)
+        except:
+          traceback.print_exc()
+
       if (lineError):
         lineError = False
         print("Line {}: {}".format(line,', '.join(row)))
+              
 
   if (dwg is not None):
+    EndTextMessage() # Make sure any message started is also ended.
     dwg.save()
 
 def main(arguments):
