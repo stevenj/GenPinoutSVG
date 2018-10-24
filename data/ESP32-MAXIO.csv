@@ -1,0 +1,252 @@
+LABELS,DEFAULT,TYPE,GROUP,Name, Official Name, GPIO, Analog 1, Analog 2, RTC,  Func 1, Func 2, Func 3
+BORDER COLOR, grey
+BORDER WIDTH, 2
+BORDER OPACITY, 1
+FILL COLOR, white, white, white, white, deepskyblue, black, yellow, green, cornflowerblue, plum, yellow, grey
+OPACITY, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+FONT , Rubik, , , Work Sans, Work Sans
+FONT SIZE , 25, , , 25, 25
+FONT COLOR , black, , , , , white
+FONT SLANT , normal , , , , , 
+FONT BOLD , 700 , , , 700 
+FONT STRETCH , normal 
+FONT OUTLINE , yellow , , , , blue
+FONT OUTLINE THICKNESS, 0.1
+BOXES, STD, , , PIN BOX, NAME BOX, SKEWED, SKEWED, SKEWED, SKEWED, SKEWED, SKEWED, SKEWED
+
+TYPE, IO, black, 1      
+TYPE, INPUT, black, 1   
+TYPE, OUTPUT, black, 1  
+
+WIRE, DIGITAL, black, 1, 5
+WIRE, PWM, black, 1, 5
+WIRE, ANALOG, black, 1, 5
+WIRE, HS-ANALOG, black, 1, 5
+WIRE, POWER, black, 1, 10
+
+GROUP, ESP32 VSDIO, fuchsia, 0.5
+GROUP, ESP32 RTC, chartreuse, 0.5
+GROUP, ESP32 VIO, deepskyblue, 0.5
+GROUP, SAML21 VDDANA, khaki, 0.5
+GROUP, SAML21 VDDIO, khaki, 0.5
+GROUP, COMBINED, chocolate, 0.5
+GROUP, POWER, black, 0
+GROUP, NONE, grey, 0.1
+
+BOX, STD, black, 1, white, 0, 1, 100,55,2,2,0,0
+BOX, PIN BOX, black, 1, white, 0, 1, 80, 55, 5, 5, -10, 0
+BOX, NAME BOX, black, 1, white, 0, 1, 125, 55, 5, 5, -10, 0
+BOX, SKEWED, black, 1, white, 0, 1, 125,55,5,5,-10,0
+BOX, PAGE BORDER, black, 1, white, 1, 50, 100,100,0,0,0,0
+BOX, DETAIL BOX, darkblue, 1, white, 0, 3, 250, 200, 15,15,0,0
+
+
+TEXT FONT, PowerPin, Dejavu Sans, 25, , black, normal, bold, normal
+TEXT FONT, Heading, BenchNine, 50, , black, normal, 700, normal
+    
+PAGE, A3-L
+DPI, 300
+
+DRAW
+
+# Load up the fonts we use
+GOOGLEFONT,"https://fonts.googleapis.com/css?family=BenchNine:300,400,700|Pragati+Narrow:700|Rubik|Ruslan+Display|Work+Sans:700,800,900"
+
+# Draw a border on the page
+BOX, PAGE BORDER, 0,0, 100%, 100%
+
+# Draw Title
+MESSAGE, 2500, 275, 175, Heading, 250, CENTER, TOP
+TEXT, black,blue, ESP32-MAXIO, NL
+
+# Place the board images at the required locations and sizes
+IMAGE,Resources/TopView-FLAT-Transparent-R110.png, 1750, 1500, , , , , , , -90
+IMAGE,Resources/BottomView-FLAT-Transparent-R110.png, 75%, 25%, 50%, 50%, , , , , -90
+
+# Cut out the Battery pins for labeling
+BOX, DETAIL BOX, 1370, 2430, 325, 410, , TOP,Battery Connector
+IMAGE,Resources/TopView-FLAT-Transparent-R110.png, 1536, 2660, , , 0, 80, 375, 275, -90
+ICON,Resources/warning.svg,1300,2665,25%,25%
+
+# Left Side Pins
+ANCHOR, 1370,755
+PINSET, LEFT, PACKED, CENTER, CENTER, 74.75, 30, 45, 60, 10, 0
+PINTEXT, POWER, OUTPUT, POWER, 3.3VP , PowerPin, 3.3V (~250ma) Switched Supply
+PIN, ANALOG , INPUT, ESP32 RTC,I36,SENSOR\\nVP,GPIO36,ADC1:0,,RTC:00,,,
+PIN, ANALOG , INPUT, ESP32 RTC,I39,SENSOR\\nVN,GPIO39,ADC1:3,,RTC:03,,,
+PIN, ANALOG , INPUT, ESP32 RTC,I34,VDET 1,GPIO34,ADC1:6,,RTC:04,,,
+PIN, ANALOG , INPUT, ESP32 RTC,I35,VDET 2,GPIO35,ADC1:7,,RTC:05,,,
+PIN, ANALOG , IO, ESP32 RTC,E32,32K XP,GPIO32,ADC1:4,TOUCH9,RTC:09,,,
+PIN, ANALOG , IO, ESP32 RTC,E33,32K XN,GPIO33,ADC1:5,TOUCH8,RTC:08,,,
+PIN, ANALOG, IO, ESP32 RTC,E14*,MTMS,GPIO14,ADC2:6,TOUCH6,RTC:16,HSPI:CLK, SD:CLK, EMAC\\nTXD2
+PIN, ANALOG, IO, ESP32 RTC,E12*,MTDI,GPIO12,ADC2:5,TOUCH5,RTC:15,HSPI:Q, SD:D2, EMAC\\nTXD3
+PIN, ANALOG, IO, ESP32 RTC,E13*,MTCK,GPIO13,ADC2:4,TOUCH4,RTC:14,HSPI:D, SD:D3, EMAC\\nRXER
+PIN, ANALOG, IO, ESP32 RTC,E27,GPIO27,GPIO27,ADC2:7,TOUCH7,RTC:17,, , EMAC\\nRXDV
+PIN, ANALOG, IO, ESP32 RTC,E26,GPIO26,GPIO26,ADC2:9,DAC:2,RTC:07,, , EMAC\\nRXD1
+PIN, ANALOG, IO, ESP32 RTC,E25,GPIO25,GPIO25,ADC2:8,DAC:1,RTC:06,, , EMAC\\nRXD0
+PIN, HS-ANALOG, IO, SAML21 VDDANA,X02,PA02,EXTINT:2,AIN:0,Y:0\\nVOUT:0,OA NEG:0
+PIN, HS-ANALOG, IO, SAML21 VDDANA,X04,PA04,EXTINT:4,AIN:4,AC:0\\nVREFB,OA OUT:2,SCOM0:0,TCC0:WO0,CCL0:IN0
+PIN, PWM, IO, COMBINED,SDA,GPIO21\\nPA22,GPIO21\\nEXTINT:6,,,,SCOM3:0\\nSCOM5:0,TC0:WO0\\nTCC0:WO4,CCL2:IN0
+PIN, PWM, IO, COMBINED,SCL,GPIO22\\nPA23,GPIO22\\nEXTINT:7,,,,SCOM3:1\\nSCOM5:1,TC0:WO1\\nTCC0:WO5,CCL2:IN1
+PIN, HS-ANALOG, IO, SAML21 VDDANA,X05,PA05,EXTINT:5,AIN:5,AC:1\\nVOUT:1,OA POS:2,SCOM0:1,TCC0:WO1,CCL0:IN1
+PIN, HS-ANALOG, IO, SAML21 VDDANA,X06,PA06,EXTINT:6,AIN:6,AC:2\\nY:4,OA POS:0,SCOM0:2,TCC1:WO0,CCL0:IN2
+PIN, HS-ANALOG, IO, SAML21 VDDANA,X07,PA07,EXTINT:7,AIN:7,AC:3,OA OUT:0,SCOM0:3,TCC1:WO1,CCL0:OUT
+PINTEXT, POWER, OUTPUT, POWER, VCC, PowerPin, Unregulated Supply (5V - 3.5V)
+PINTEXT, POWER, IO, POWER, GND, PowerPin, Ground Reference
+
+# Right Side Pins
+ANCHOR, 2135,755
+PINSET, RIGHT, PACKED, CENTER, CENTER, 74.75, 30, 45, 60, 10, 0
+PINTEXT, POWER, O, POWER, 3V3 ,PowerPin, 3.3V (~450ma) Continuous Supply
+PIN, DIGITAL, IO, ESP32 VIO,E23,GPIO23,GPIO23,,,,VSPID,  
+PIN, PWM, IO, COMBINED,TX,U0TXD\\nPA01,GPIO01\\nEXTINT:1,,,,U0TXD\\nSCOM1:1,CLK:OUT3\\nTCC2:WO1
+PIN, PWM, IO, COMBINED,RX,U0RXD\\nPA00,GPIO03\\nEXTINT:0,,,,U0RXD\\nSCOM1:0,CLK:OUT2\\nTCC2:WO0
+PIN, DIGITAL, IO, ESP32 VIO,E19,GPIO19,GPIO19,,,,VSPIQ,,EMAC\\nTXD0
+PIN, DIGITAL, IO, ESP32 VIO,E18,GPIO18,GPIO18,,,,VSPICLK,
+PIN, DIGITAL, IO, ESP32 VIO,E05,GPIO5,GPIO5,,,,VSPICS0,,EMAC\\nRXCLK
+PIN, ANALOG, IO, COMBINED,E00,GPIO0\\nPA14,GPIO0\\nEXTINT14,ADC2:1,TOUCH1,RTC:11\\nSCOM2:2,\\nSCOM4:2,CLK:OUT1\\nXIN,EMAC\\nTXCLK
+PIN, ANALOG, IO, ESP32 RTC,E04*,GPIO4,GPIO4,ADC2:0,TOUCH0,RTC:10,HSPI:HD,SD:D1,EMAC\\nTXER
+PIN, ANALOG, IO, ESP32 RTC,E02*,GPIO2,GPIO2,ADC2:2,TOUCH2,RTC:12,HSPI:WP,SD:D0
+PIN, ANALOG, IO, ESP32 RTC,E15*,MTDO,GPIO15,ADC2:3,TOUCH1,RTC:13,HSPI:CS0,SD:CMD,EMAC\\nRXD3
+PIN, PWM, IO, SAML21 VDDIO,X31,PA31,EXTINT:11,,,SWDIO,SCOM1:2,TCC1:WO0,CCL1:OUT
+PIN, PWM, IO, SAML21 VDDIO,X30,PA30,EXTINT:10,,,SWCLK,SCOM1:3,TCC1:WO1,CCL1:IN0
+PINTEXT, POWER, IO, COMBINED,RST, PowerPin, Board Master Reset (Active Low)
+PIN, HS-ANALOG, IO, SAML21 VDDIO,X09,PA09,EXTINT:9,AIN:17,X:1/Y:7,,SCOM0:1\\nSCOM2:1,TCC0:WO1\\nTCC1:WO3,CCL1:IN1
+PIN, HS-ANALOG, IO, SAML21 VDDIO,X10,PA10,EXTINT:10,AIN:18,X:2/Y:8,,SCOM0:2\\nSCOM2:2,TCC1:WO0\\nTCC0:WO2,CCL1:IN2
+PIN, PWM, IO, SAML21 VDDIO,X16,PA16,EXTINT:0,,X:4,,SCOM1:0\\nSCOM3:0,TCC2:WO0\\nTCC0:WO6,CCL0:IN0
+PIN, PWM, IO, SAML21 VDDIO,X17,PA17,EXTINT:1,,X:5,,SCOM1:1\\nSCOM3:1,TCC2:WO1\\nTCC0:WO7,CCL0:IN1
+PIN, PWM, IO, SAML21 VDDIO,X18,PA18,EXTINT:2,,X:6,,SCOM1:2\\nSCOM3:2,TC4:WO0\\nTCC0:WO2,CCL0:IN2
+PIN, PWM, IO, SAML21 VDDIO,X19,PA19,EXTINT:3,,X:7,,SCOM1:3\\nSCOM3:3,TC4:WO1\\nTCC0:WO3,CCL0:OUT
+PINTEXT, POWER, IO, POWER , VBUS , PowerPin,"MAX 5.2V Power IO, Primary Supply"
+PINTEXT, POWER, IO, POWER , GND, PowerPin, Ground Reference
+PINTEXT, DIGITAL, OUTPUT, SAML21 VDDIO , PA08, PowerPin, Status LED Data (Internal)
+PINTEXT, DIGITAL, OUTPUT, SAML21 VDDIO , PA11, PowerPin, ESP32 Power Control (Internal)
+PINTEXT, DIGITAL, INPUT, SAML21 VDDIO , PA15, PowerPin, SDCard Inserted Detect (Internal)
+PINTEXT, DIGITAL, INPUT, SAML21 VDDIO , PA27, PowerPin, USB Connector ID (Internal)
+
+# Pin labels for Battery Header
+ANCHOR, 1370,2670
+PINSET, LEFT, PACKED, CENTER, CENTER, 74.75, 30, 45, 60, 10, 0
+PINTEXT, POWER, IO, POWER , BAT+ , PowerPin,Battery Positive Supply
+PINTEXT, POWER, IO, POWER , GND, PowerPin, Ground Reference
+PINTEXT, HS-ANALOG, INPUT, SAML21 VDDANA , PA05\\nAIN:1, PowerPin, Battery Voltage (Internal)
+
+# WARNING for Battery Header
+MESSAGE, 1120, 2575, 35, Name, 26, CENTER, TOP
+TEXT, black,red, WARNING!, NL
+TEXT, black,red, CHECK BATTERY ORIENTATION, NL
+TEXT, black,red, NO REVERSE POLARITY PROTECTION, NL
+
+# RF ICON and Description
+ICON,Resources/antenna-3.svg,2400,800,40%,40%
+ICON,Resources/WiFi_Logo.svg,2750,800,25%,25%
+ICON,Resources/Bluetooth.svg,2860,1035,10%,10%
+MESSAGE, 2350, 700, 35, Name, 26, LEFT, TOP
+TEXT, none, black, 2.4Ghz External Antenna, NL
+TEXT, none, black, Optional Antenna Diversity (Max 16), NL
+
+# USB ICON and Description
+ICON,Resources/USB_icon.svg,1900,2550,100%,75%
+MESSAGE, 1900, 2625, 35, Name, 26, CENTER, TOP
+TEXT, none, black, USB Micro AB, NL
+TEXT, none, black, Device/Host/OTG, NL
+TEXT, none, black, Fully Programable, NL
+TEXT, none, black, Full Speed (12Mbps), NL
+TEXT, none, black, Power Supply (5V), NL
+
+# SDCard ICON and Description
+ICON,Resources/SDXC.svg,3700,1450,100%,100%
+MESSAGE, 3700, 1550, 35, Name, 26, CENTER, TOP
+TEXT, none, black, Micro SD/HC/XC Card, NL
+TEXT, none, black, 4 Bit Mode (DEFAULT), NL
+TEXT, none, black, 1 Bit Mode (CUT JP3/JP4/JP6), NL
+TEXT, none, black, Disabled (CUT JP1-JP6), NL
+
+# Key
+BOX, DETAIL BOX, 200, 2450, 650, 800, , TOP, KEY
+
+ANCHOR, 250,2500
+PINSET, RIGHT, PACKED, CENTER, CENTER, 74.75, 30, 45, 60, 10, 0
+PINTEXT, POWER, OUTPUT, POWER, "...", PowerPin, Power Output Pin
+PINTEXT, POWER, IO, POWER , "...", PowerPin, Power IO Pin
+PINTEXT, DIGITAL, IO, ESP32 VIO, "...", PowerPin, ESP32 DIGITAL GPIO
+PINTEXT, ANALOG, INPUT, ESP32 RTC, "...", PowerPin, ESP32 Analog Input Pin
+PINTEXT, ANALOG, IO, ESP32 RTC, "...", PowerPin, ESP32 Analog IO Pin
+PINTEXT, PWM, IO, COMBINED, "...", PowerPin, Shared Hardware PWM Pin
+PINTEXT, ANALOG, IO, COMBINED, "...", PowerPin, Shared Analog IO Pin
+PINTEXT, DIGITAL, IO, SAML21 VDDIO, "...", PowerPin, SAML21 GPIO
+PINTEXT, PWM, IO, SAML21 VDDIO, "...", PowerPin, SAML21 Hardware PWM Pin
+PINTEXT, HS-ANALOG, IO, SAML21 VDDIO, "...", PowerPin, SAML21 Highspeed Analog Pin
+
+# Blurb
+BOX, DETAIL BOX, 2900, 2450, 1750, 1000, , TOP, Features
+MESSAGE, 3000, 2550, 35, Name, 26, LEFT, TOP
+TEXT, none, black, ESP32-MAXIO by Sakura Industries Limited, NL
+TEXT, none, black, , NL
+TEXT, none, black, ESP32 Wrover-i Module, NL
+TEXT, none, black, * CPU : 2 x Xtensa 32-bit LX6 @ 240Mhz, NL
+TEXT, none, black, * SRAM : 520KB, NL
+TEXT, none, black, * Flash :  16MB, NL
+TEXT, none, black, * PSRAM :   8MB, NL
+TEXT, none, black, * WiFi : 2.4Ghz 802.11 b/g/n, NL
+TEXT, none, black, * Bluetooth : v4.2 BR/EDR and BLE, NL
+TEXT, none, black, * ADC : 12-bit SAR ADC up to 18 channels @ 6Khz, NL
+TEXT, none, black, * DAC : 8-bit x 2 @ 6Khz, NL
+TEXT, none, black, * TOUCH : 10 x Capacitive touch sensors, NL
+TEXT, none, black,"* SPI:4, I2S:2, I2C:2, UART:3, CAN 2.0:1 ", NL
+TEXT, none, black, * SD/SDIO/CE-ATA/MMC/eMMC host controller, NL
+TEXT, none, black, * SDIO/SPI slave controller, NL
+TEXT, none, black, * Ethernet MAC interface, NL
+TEXT, none, black,"* Infrared remote controller (TX/RX x 8)", NL
+TEXT, none, black, * Motor & LED PWM, NL
+TEXT, none, black, * Termperature and Hall effect Sensors, NL
+TEXT, none, black, , NL
+TEXT, none, black, BOOTLOADER, NL
+TEXT, none, black, * Simulated Thumb Drive, NL
+TEXT, none, black, * Driverless Drag and drop programming of ESP32 & SAML21, NL
+TEXT, none, black, * Traditional USB serial interface still present, NL
+TEXT, none, black, * I2C IO Expansion Interface for ESP32 to SAML21, NL
+
+
+MESSAGE, 3825, 2550, 35, Name, 26, LEFT, TOP
+TEXT, none, black, , NL
+TEXT, none, black, , NL
+TEXT, none, black, Microchip SAML21 IO Coprocessor, NL
+TEXT, none, black, * CPU : ARM Cortex M0+ @ 48Mhz, NL
+TEXT, none, black, * SRAM : 40KB, NL
+TEXT, none, black, * FLASH : 264KB, NL
+TEXT, none, black, * Ultra Low Power, NL
+TEXT, none, black, * Timers : 6, NL
+TEXT, none, black, * USB Interface : Device & Host, NL
+TEXT, none, black, * AES Engine & True Random Number Generator, NL
+TEXT, none, black, * 4 x Configurable Custom Logic (CCL) (LUTs), NL
+TEXT, none, black, * 6 x SERCOMs (UART/SPI/I2C), NL
+TEXT, none, black, * ADC 12/16 Bit @ 1Msps (10 Channels), NL
+TEXT, none, black, * DAC 12 Bit @ 1Msps (2 Channels), NL
+TEXT, none, black, * 3 x OPAMPS, NL
+TEXT, none, black, * 2 x Analog Comparators, NL
+TEXT, none, black, * Real Time Clock, NL
+TEXT, none, black, , NL
+TEXT, none, black, , NL
+TEXT, none, black, , NL
+TEXT, none, black, STATUS LEDS, NL
+TEXT, none, black, * 4 x RGB Status Leds, NL
+TEXT, none, black, * Neopixel/WS2812B Single Wire Bus, NL
+TEXT, none, black, * LED Bus Header for driving up to 1020 LEDS @ 30fps., NL
+
+
+
+
+
+
+
+# Credits for web assets
+MESSAGE, 100, 3300, 25, Name, 25, LEFT, TOP
+TEXT, none,gray, Credits:, NL
+TEXT, none,gray, Icons made by Freepik (http://www.freepik.com) from Flaticon (https://www.flaticon.com/) is licensed by Creative Commons BY 3.0, NL
+TEXT, none,gray, http://simpleicon.com/wp-content/uploads/antenna-3.svg, NL
+TEXT, none,gray, https://upload.wikimedia.org/wikipedia/commons/6/67/USB_icon.svg, NL
+TEXT, none,gray, https://upload.wikimedia.org/wikipedia/commons/a/ae/WiFi_Logo.svg, NL
+TEXT, none,gray, https://upload.wikimedia.org/wikipedia/commons/d/da/Bluetooth.svg, NL
+TEXT, none,gray, https://upload.wikimedia.org/wikipedia/commons/9/92/SDXC.svg, NL
+
