@@ -224,9 +224,10 @@ def writeIcon(params):
       return False
 
     # Then get raw PNG data and encode DIRECTLY into the SVG file.
-    image_data = img.make_blob()
-    encoded = base64.b64encode(image_data).decode()
-    pngdata = 'data:image/svg+xml;base64,{}'.format(encoded)
+    with open(imgfile, "rb") as imgfile:
+      image_data = imgfile.read()
+      encoded = base64.b64encode(image_data).decode()
+      pngdata = 'data:image/svg+xml;base64,{}'.format(encoded)
 
     W = round(get_size(W,img.width))
     H = round(get_size(H,img.height))
